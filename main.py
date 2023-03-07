@@ -18,9 +18,6 @@ from scipy.signal import find_peaks
 import numpy.polynomial.polynomial as poly
 
 
-show = True
-plotcount = 0
-
 class Lane:
     '''  
     Detect lane points by using a sliding window search where the initial estimates for the sliding windows are made using an intensity-based histogram
@@ -186,7 +183,7 @@ def render_lanes_on_image(data,img, calib, img_width, img_height,figg):
         ax.plot(imgfov_pc_pixel[0],imgfov_pc_pixel[1],color='red',linewidth=2)
     
     plt.savefig('output/'+figg+'.png')
-    plt.show()
+    # plt.show()
     # show(img)
     
     # return imgfov_pc_pixel[0], imgfov_pc_pixel[1]
@@ -369,7 +366,7 @@ def render_lidar_on_image(pts_velo, img, calib, img_width, img_height,label):
     # print(len(label[inds]))
     plt.yticks([])
     plt.xticks([])
-    plt.show()
+    # plt.show()
     # return 0,0,0,0
     return imgfov_pc_pixel[0], imgfov_pc_pixel[1],pts_velo[inds,2],inds
 
@@ -413,36 +410,30 @@ def remove_shortfits(arr_list):
     return new_arr
 
 def main():
-    filenames=['um_000069.png']
-    # filenames = os.listdir('dataset/data_road/training/image_2')
-    # print(len(filenames))
+    # filenames=['um_000069.png']
+    filenames = os.listdir('./dataset/data_road/training/image_2')
+    filenames.remove(".gitkeep")
+    print(len(filenames))
     for filename in filenames:
         filename=filename.replace('.png',"")
-        rgb = cv2.imread('dataset/data_road/training/image_2/'+ filename+'.png')
+        rgb = cv2.imread('./dataset/data_road/training/image_2/'+ filename+'.png')
         h, w, c = rgb.shape
-        data, lidar = read_lidar_data("dataset/data_road_velodyne/training/velodyne/"+filename+".bin")
-        calib = read_calib_file('dataset/data_road/training/calib/'+filename+'.txt')
+        data, lidar = read_lidar_data("./dataset/data_road_velodyne/training/velodyne/"+filename+".bin")
+        calib = read_calib_file('./dataset/data_road/training/calib/'+filename+'.txt')
         render_lidar_on_image(lidar,rgb, calib,w,h,lidar[:,2])
         data=data.to_numpy()
         cloud,ind=find_road_plane(data)
         data=remove_noise(cloud)
         data=data.to_numpy()
         print('after road plane and noise removal',len(data))
-        # print(data)
-        # return 1
         print("--------------")
-        # print(lidar)
         # render_lidar_on_image(data[:,0:4],rgb, calib, w,h,data[:,2])
-        # show(rgb)
         # ###############  finding the lanes ############
         plt.figure()
         lane=Lane()
         yval,histVal=lane.peak_intensity_ratio(data,50)
-        # peaks= find_peaks(histVal)[0]
         peaks=lane.lane_find_peaks(histVal)
-        # print("histVal: "+ ",".join(str(histVal)))
         print("peaks: "+ np.array2string(peaks, separator=', '))
-        # print("peaks: "+ ",".join([str(yval[x]) for x in peaks]))
         print(len(peaks))
         mid=int(len(peaks)/2)
         print('starting lane points',mid)
